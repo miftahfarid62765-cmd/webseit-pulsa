@@ -211,7 +211,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
+        import { getRedirectUrl } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"; 
         // --- Konfigurasi Firebase Anda (Ganti dengan data Anda) ---
         // Anda bisa mengambil data ini dari Firebase Console -> Project Settings
         const firebaseConfig = {
@@ -253,59 +253,7 @@
             }
         }
 
-        // --- Inisialisasi Firebase ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        // Tampilkan loading saat halaman pertama kali dimuat
-        showLoading();
-
-        // 1. Tangani hasil redirect dari Google.
-        // Fungsi ini harus dijalankan paling pertama.
-        getRedirectResult(auth)
-            .then((result) => {
-                // Periksa apakah ada hasil dari redirect, jika ya, abaikan,
-                // onAuthStateChanged akan menangani UI.
-                if (result) {
-                    console.log("Login berhasil dari redirect.");
-                }
-            })
-            .catch((error) => {
-                // Jika ada error saat redirect, tampilkan pesan.
-                showMessage(statusMessage, `Gagal masuk: ${error.message}`, true);
-            })
-            .finally(() => {
-                // Setelah selesai cek redirect, sembunyikan loading overlay
-                // dan aktifkan tombol login.
-                hideLoading();
-                googleLoginBtn.disabled = false;
-                googleLoginBtn.classList.remove('disabled-btn');
-            });
-
-        // 2. Listener perubahan status otentikasi.
-        // Ini adalah sumber utama untuk mengatur tampilan UI (login/dashboard).
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Jika pengguna terdeteksi, tampilkan dashboard.
-                loginSection.style.display = 'none';
-                dashboardSection.style.display = 'flex';
-                userName.textContent = user.displayName || 'Pengguna';
-            } else {
-                // Jika tidak ada pengguna, tampilkan halaman login.
-                loginSection.style.display = 'flex';
-                dashboardSection.style.display = 'none';
-            }
-        });
-        
-        // --- Event Listener Tombol ---
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', () => {
-                showLoading();
-                signInWithRedirect(auth, provider);
-            });
-        }
-
+    
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
                 signOut(auth);
@@ -339,3 +287,4 @@
     </script>
 </body>
 </html>
+
