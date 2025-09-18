@@ -173,13 +173,34 @@
            
         };
         
-        // --- DOM Elements ---
+    
+     
+        // Inisialisasi Firebase
+        let app, auth;
+        let authReady = false;
+        const errorMessage = document.getElementById('error-message');
+        
+        function showMessage(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            authReady = true;
+            
+        } catch (e) {
+            console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
+            const initError = e.message;
+            showMessage(errorMessage, `Kesalahan: Gagal menginisialisasi Firebase. ${initError}`);
+        }
+
+        const provider = new GoogleAuthProvider();
+
         const googleLoginBtn = document.getElementById('google-login-btn');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const statusMessage = document.getElementById('status-message');
-        const errorMessage = document.getElementById('error-message');
 
-        // --- Helper Functions ---
         function showLoading() {
             loadingOverlay.style.display = 'flex';
         }
@@ -187,59 +208,34 @@
         function hideLoading() {
             loadingOverlay.style.display = 'none';
         }
-
-        function showMessage(element, message, type) {
-            if (!element) {
-                console.error("Elemen pesan tidak ditemukan di DOM.");
-                return;
-            }
-            element.textContent = message;
-            element.style.display = 'block';
-            if (type === 'success') {
-                element.classList.add('success');
-                element.classList.remove('error');
-            } else {
-                element.classList.add('error');
-                element.classList.remove('success');
-            }
-        }
         
-        // --- Inisialisasi Firebase ---
-        let auth;
-        try {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            getAnalytics(app); // Menginisialisasi analytics
-        } catch (e) {
-            console.error("Kesalahan inisialisasi Firebase. Pastikan konfigurasi Anda benar.", e);
-            showMessage(errorMessage, "Kesalahan: Gagal menginisialisasi Firebase. Periksa konsol untuk detail.", 'error');
-        }
-
-        const provider = new GoogleAuthProvider();
-
-        // --- Event Listener ---
-        if (googleLoginBtn && auth) {
+        if (googleLoginBtn) {
             googleLoginBtn.addEventListener('click', () => {
+                if (!authReady) {
+                    showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.");
+                    return;
+                }
+                
                 showLoading();
+                errorMessage.style.display = 'none'; 
+
                 signInWithPopup(auth, provider)
                     .then((result) => {
-                        // Login berhasil
-                        const user = result.user;
-                        hideLoading();
-                        showMessage(statusMessage, `Login Berhasil! Selamat datang, ${user.displayName}!`, 'success');
-                        console.log("Login berhasil! Data pengguna:", user);
+                        window.location.href = 'dashboard.html';
                     })
                     .catch((error) => {
-                        // Login gagal
                         hideLoading();
                         const errorCode = error.code;
-                        const message = error.message; 
-                        showMessage(errorMessage, `Login gagal: ${message}`, 'error');
-                        console.error("Login gagal:", errorCode, message);
+                        const errorText = error.message;
+                        if (errorCode === 'auth/unauthorized-domain') {
+                            showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.");
+                        } else {
+                            showMessage(errorMessage, `Login gagal: ${errorText}`);
+                        }
+                        console.error("Login gagal:", errorCode, errorText);
                     });
             });
         }
     </script>
 </body>
 </html>
-
