@@ -29,12 +29,6 @@
             text-align: center;
             width: 100%;
         }
-        .logo-text {
-            color: #ff6e40;
-            font-size: 2.25rem;
-            font-weight: 700;
-            letter-spacing: -0.05em;
-        }
         .welcome-text {
             font-size: 1.5rem;
             font-weight: 600;
@@ -47,9 +41,8 @@
             margin-top: 0.5rem;
         }
         .btn-google {
-            background-color: #fff;
-            color: #1a202c;
-            border: 1px solid #e2e8f0;
+            background-color: #ff6e40;
+            color: #fff;
             padding: 0.75rem 1.5rem;
             border-radius: 9999px;
             display: flex;
@@ -60,13 +53,15 @@
             width: 100%;
             margin-top: 2rem;
             transition: all 0.2s;
+            border: none;
         }
         .btn-google:hover {
-            background-color: #f7fafc;
+            background-color: #e55c32;
         }
         .google-icon {
             width: 1.5rem;
             height: 1.5rem;
+            filter: brightness(0) invert(1);
         }
         .footer-links {
             font-size: 0.875rem;
@@ -105,23 +100,14 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .message-box {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            text-align: center;
-            font-weight: 600;
-            display: none;
-        }
-        .message-box.success {
-            background-color: #d1f7e0;
-            color: #2f855a;
-        }
         .error-message {
             color: #e53e3e;
             font-size: 0.875rem;
             margin-top: 0.5rem;
             display: none;
+            background-color: #fecaca;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
         }
     </style>
 </head>
@@ -140,13 +126,14 @@
             <p class="promo-text">Nikmati kemudahan transaksi dan promo eksklusif khusus pengguna yang login.</p>
             
             <button id="google-login-btn" class="btn-google">
+                <!-- Ikon Google SVG -->
                 <svg class="google-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12.24 10.213c-1.372 0-2.617-.468-3.64-1.258V6.634C9.563 5.378 10.74 4.542 12.24 4.542c1.5 0 2.677.836 3.64 2.052l2.396-1.921C16.96 3.03 14.77 1.542 12.24 1.542c-2.48 0-4.67 1.488-6.196 3.738L4.364 3.03C2.84 5.28 1.956 7.64 1.956 10.213s.884 4.933 2.408 7.183l1.68-1.558C5.232 15.352 4.4 13.585 4.4 11.666c0-1.919.832-3.686 2.408-4.94L7.85 5.567C8.756 4.61 10.04 4.092 11.458 4.092c1.417 0 2.702.518 3.64 1.536l-1.314 1.22c-.938-1.018-2.072-1.536-3.418-1.536-1.5 0-2.677.836-3.64 2.052l-2.396 1.921C7.03 12.394 9.22 13.88 11.7 13.88c2.48 0 4.67-1.488 6.196-3.738l1.68 1.558C17.228 15.352 16.4 17.119 16.4 19.038c0 1.919-.832 3.686-2.408 4.94L12.592 22.42c-1.666-1.638-2.5-3.69-2.5-5.918 0-2.228.834-4.28 2.5-5.918z" fill="#000000"/>
                 </svg>
                 Masuk dengan Google
             </button>
 
-            <div id="status-message" class="message-box"></div>
+            <!-- Menghapus status-message karena kita langsung redirect -->
             <div id="error-message" class="error-message"></div>
 
             <p class="footer-links">
@@ -160,21 +147,18 @@
         // Import fungsi yang Anda butuhkan dari Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-       
-
+        
         // Konfigurasi aplikasi web Firebase Anda
+        // >>>>>>> PENTING: GANTI SEMUA NILAI DI BAWAH INI DENGAN KREDENSIAL ASLI ANDA <<<<<<<
         const firebaseConfig = {
-            apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA",
+            apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", 
             authDomain: "webseit-convert-pulsa.firebaseapp.com",
             projectId: "webseit-convert-pulsa",
             storageBucket: "webseit-convert-pulsa.firebasestorage.app",
             messagingSenderId: "306830134070",
-            appId: "1:306830134070:web:23c764342a141749238197",
-           
+            appId: "1:306830134070:web:23c764342a141749238197"
         };
         
-    
-     
         // Inisialisasi Firebase
         let app, auth;
         let authReady = false;
@@ -224,7 +208,6 @@
                         window.location.href = 'dashboard.html';
                     })
                     .catch((error) => {
-                        hideLoading();
                         const errorCode = error.code;
                         const errorText = error.message;
                         if (errorCode === 'auth/unauthorized-domain') {
@@ -233,6 +216,9 @@
                             showMessage(errorMessage, `Login gagal: ${errorText}`);
                         }
                         console.error("Login gagal:", errorCode, errorText);
+                    })
+                    .finally(() => {
+                        hideLoading();
                     });
             });
         }
