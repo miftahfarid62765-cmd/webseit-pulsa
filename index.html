@@ -208,7 +208,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Mengubah import untuk menggunakan signInWithRedirect dan getRedirectResult
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", 
@@ -256,6 +257,23 @@
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             authReady = true;
+
+            // Tambahkan logika ini untuk menangani hasil redirect
+            getRedirectResult(auth)
+                .then((result) => {
+                    if (result) {
+                        // Pengguna berhasil login setelah redirect
+                        console.log("Login sukses setelah redirect:", result.user);
+                    }
+                })
+                .catch((error) => {
+                    // Tangani kesalahan setelah redirect
+                    const errorCode = error.code;
+                    const errorText = error.message;
+                    showMessage(errorMessage, `Login gagal: ${errorText}`, true);
+                    console.error("Login gagal setelah redirect:", errorCode, errorText);
+                });
+
         } catch (e) {
             console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
             showMessage(errorMessage, `Kesalahan: Gagal menginisialisasi Firebase. ${e.message}`, true);
@@ -270,10 +288,11 @@
                 dashboardSection.style.display = 'flex';
                 userName.textContent = user.displayName || 'Pengguna';
             } else {
-                // Pengguna belum login atau sudah logout, tampilkan halaman login
+                // Pengguna belum login atau sudah keluar, tampilkan halaman login
                 loginSection.style.display = 'flex';
                 dashboardSection.style.display = 'none';
             }
+            hideLoading();
         });
         
         if (googleLoginBtn) {
@@ -285,23 +304,9 @@
                 
                 showLoading();
                 errorMessage.style.display = 'none'; 
-
-                signInWithPopup(auth, provider)
-                    .then((result) => {
-                        // Tidak perlu redirect, onAuthStateChanged akan menangani tampilan
-                        hideLoading();
-                    })
-                    .catch((error) => {
-                        hideLoading();
-                        const errorCode = error.code;
-                        const errorText = error.message;
-                        if (errorCode === 'auth/unauthorized-domain') {
-                            showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.", true);
-                        } else {
-                            showMessage(errorMessage, `Login gagal: ${errorText}`, true);
-                        }
-                        console.error("Login gagal:", errorCode, errorText);
-                    });
+                
+                // Mengubah signInWithPopup menjadi signInWithRedirect
+                signInWithRedirect(auth, provider);
             });
         }
 
