@@ -142,6 +142,19 @@
         button:not(#google-login-btn):hover {
             background-color: #3182ce;
         }
+        .debug-log {
+            background-color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 2rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 0.75rem;
+            text-align: left;
+            width: 100%;
+            overflow: auto;
+            max-height: 200px;
+        }
     </style>
 </head>
 <body>
@@ -206,9 +219,14 @@
         <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
     </div>
 
+    <!-- Bagian Log Debug (ditambahkan) -->
+    <div class="container debug-container">
+        <h3 class="font-bold text-sm text-gray-700 mb-2">Log Debug</h3>
+        <pre id="debug-log" class="debug-log">Memulai debugging...</pre>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // Mengubah import untuk menggunakan signInWithRedirect dan getRedirectResult
         import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
         const firebaseConfig = {
@@ -232,6 +250,7 @@
         const errorMessage = document.getElementById('error-message');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const convertMessage = document.getElementById('convert-message');
+        const debugLog = document.getElementById('debug-log');
 
         function showLoading() {
             loadingOverlay.style.display = 'flex';
@@ -253,42 +272,52 @@
             }
         }
         
+        function logDebug(message) {
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            debugLog.textContent += `\n[${timeString}] ${message}`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+
         try {
+            logDebug("Menginisialisasi Firebase...");
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             authReady = true;
+            logDebug("Firebase berhasil diinisialisasi.");
 
-            // Tambahkan logika ini untuk menangani hasil redirect
+            logDebug("Memeriksa hasil redirect...");
             getRedirectResult(auth)
                 .then((result) => {
                     if (result) {
-                        // Pengguna berhasil login setelah redirect
-                        console.log("Login sukses setelah redirect:", result.user);
+                        logDebug(`Login sukses setelah redirect. Pengguna: ${result.user.displayName}`);
+                    } else {
+                        logDebug("Tidak ada hasil redirect yang ditemukan.");
                     }
                 })
                 .catch((error) => {
-                    // Tangani kesalahan setelah redirect
                     const errorCode = error.code;
                     const errorText = error.message;
                     showMessage(errorMessage, `Login gagal: ${errorText}`, true);
-                    console.error("Login gagal setelah redirect:", errorCode, errorText);
+                    logDebug(`ERROR: Login gagal setelah redirect. Kode: ${errorCode}, Pesan: ${errorText}`);
                 });
 
         } catch (e) {
             console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
             showMessage(errorMessage, `Kesalahan: Gagal menginisialisasi Firebase. ${e.message}`, true);
+            logDebug(`FATAL ERROR: Gagal menginisialisasi Firebase. Pesan: ${e.message}`);
         }
 
         const provider = new GoogleAuthProvider();
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Pengguna sudah login, tampilkan dashboard
+                logDebug(`onAuthStateChanged: Pengguna terdeteksi. UID: ${user.uid}`);
                 loginSection.style.display = 'none';
                 dashboardSection.style.display = 'flex';
                 userName.textContent = user.displayName || 'Pengguna';
             } else {
-                // Pengguna belum login atau sudah keluar, tampilkan halaman login
+                logDebug("onAuthStateChanged: Tidak ada pengguna yang terdeteksi.");
                 loginSection.style.display = 'flex';
                 dashboardSection.style.display = 'none';
             }
@@ -297,26 +326,31 @@
         
         if (googleLoginBtn) {
             googleLoginBtn.addEventListener('click', () => {
+                logDebug("Tombol Login diklik.");
                 if (!authReady) {
                     showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.", true);
+                    logDebug("Login dibatalkan: authReady = false.");
                     return;
                 }
                 
                 showLoading();
                 errorMessage.style.display = 'none'; 
                 
-                // Mengubah signInWithPopup menjadi signInWithRedirect
-                signInWithRedirect(auth, provider);
+                logDebug("Memulai proses signInWithRedirect...");
+                signInWithRedirect(auth, provider).catch(error => {
+                    logDebug(`ERROR: signInWithRedirect gagal. Kode: ${error.code}, Pesan: ${error.message}`);
+                });
             });
         }
 
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
+                logDebug("Tombol Logout diklik.");
                 signOut(auth).then(() => {
-                    // Berhasil keluar
-                    console.log("Pengguna berhasil keluar.");
+                    logDebug("Pengguna berhasil keluar.");
                 }).catch((error) => {
                     console.error("Kesalahan saat keluar:", error);
+                    logDebug(`ERROR: Gagal keluar. Pesan: ${error.message}`);
                 });
             });
         }
@@ -325,6 +359,7 @@
             convertForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 convertMessage.style.display = 'none';
+                logDebug("Tombol Konversi diklik.");
                 
                 const provider = document.getElementById('provider').value;
                 const phone = document.getElementById('phone').value;
@@ -332,17 +367,19 @@
 
                 if (!phone || !amount) {
                     showMessage(convertMessage, "Harap isi semua kolom!", true);
+                    logDebug("Konversi gagal: Input kosong.");
                     return;
                 }
 
-                // Simulasikan proses konversi
                 showLoading();
+                logDebug("Memulai simulasi konversi...");
                 setTimeout(() => {
                     hideLoading();
                     const user = auth.currentUser;
                     const successMessage = `Halo ${user.displayName}! Pulsa Anda sebesar Rp${amount} dari ${provider} berhasil dikonversi. Terima kasih!`;
                     showMessage(convertMessage, successMessage);
-                }, 2000); // Tunda 2 detik untuk simulasi
+                    logDebug("Simulasi konversi selesai.");
+                }, 2000);
             });
         }
     </script>
