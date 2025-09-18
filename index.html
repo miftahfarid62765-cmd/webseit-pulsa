@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Konverter Pulsa</title>
+    <title>Konverter Pulsa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -109,6 +109,39 @@
             padding: 0.5rem;
             border-radius: 0.375rem;
         }
+        .success-message {
+            color: #2f855a;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+            background-color: #c6f6d5;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+        }
+        #login-section {
+            display: none;
+        }
+        #dashboard-section {
+            display: none;
+            width: 100%;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            box-sizing: border-box;
+        }
+        button:not(#google-login-btn) {
+            background-color: #4299e1;
+            color: white;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        button:not(#google-login-btn):hover {
+            background-color: #3182ce;
+        }
     </style>
 </head>
 <body>
@@ -117,11 +150,10 @@
         <div class="spinner"></div>
     </div>
 
-    <div class="container">
+    <!-- Halaman Login -->
+    <div id="login-section" class="container">
         <div class="card">
-            <!-- Menampilkan gambar yang diunggah -->
             <img src="https://placehold.co/300x200/FFFFFF/000000?text=Gambar+Animasi" alt="Gambar ilustrasi" class="mx-auto my-4 w-auto h-48">
-
             <h2 class="welcome-text">Ayo Login, Ada Promo Menunggu!</h2>
             <p class="promo-text">Nikmati kemudahan transaksi dan promo eksklusif khusus pengguna yang login.</p>
             
@@ -133,7 +165,6 @@
                 Masuk dengan Google
             </button>
 
-            <!-- Menghapus status-message karena kita langsung redirect -->
             <div id="error-message" class="error-message"></div>
 
             <p class="footer-links">
@@ -143,13 +174,42 @@
         <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
     </div>
 
+    <!-- Halaman Beranda / Dashboard -->
+    <div id="dashboard-section" class="container">
+        <div class="card">
+            <h2 class="welcome-text">Selamat Datang, <span id="user-name">Pengguna</span>!</h2>
+            <p class="promo-text">Silakan masukkan detail konversi pulsa Anda.</p>
+            
+            <form id="convert-form" class="mt-6">
+                <div class="mb-4">
+                    <label for="provider" class="block text-left font-medium text-gray-700">Penyedia Layanan</label>
+                    <select id="provider" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="telkomsel">Telkomsel</option>
+                        <option value="indosat">Indosat</option>
+                        <option value="xl">XL Axiata</option>
+                        <option value="tri">Tri</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="phone" class="block text-left font-medium text-gray-700">Nomor Ponsel</label>
+                    <input type="tel" id="phone" placeholder="Masukkan nomor ponsel Anda" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div class="mb-4">
+                    <label for="amount" class="block text-left font-medium text-gray-700">Nominal Pulsa</label>
+                    <input type="number" id="amount" placeholder="Masukkan nominal pulsa" min="10000" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div id="convert-message" class="success-message"></div>
+                <button type="submit" class="bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg mt-4 hover:bg-indigo-600 transition duration-300">Konversi Sekarang</button>
+            </form>
+            <button id="logout-btn" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg mt-4 hover:bg-gray-500 transition duration-300">Keluar</button>
+        </div>
+        <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
+    </div>
+
     <script type="module">
-        // Import fungsi yang Anda butuhkan dari Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // Konfigurasi aplikasi web Firebase Anda
-        // >>>>>>> PENTING: GANTI SEMUA NILAI DI BAWAH INI DENGAN KREDENSIAL ASLI ANDA <<<<<<<
         const firebaseConfig = {
             apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", 
             authDomain: "webseit-convert-pulsa.firebaseapp.com",
@@ -159,31 +219,18 @@
             appId: "1:306830134070:web:23c764342a141749238197"
         };
         
-        // Inisialisasi Firebase
         let app, auth;
         let authReady = false;
-        const errorMessage = document.getElementById('error-message');
-        
-        function showMessage(element, message) {
-            element.textContent = message;
-            element.style.display = 'block';
-        }
 
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            authReady = true;
-            
-        } catch (e) {
-            console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
-            const initError = e.message;
-            showMessage(errorMessage, `Kesalahan: Gagal menginisialisasi Firebase. ${initError}`);
-        }
-
-        const provider = new GoogleAuthProvider();
-
+        const loginSection = document.getElementById('login-section');
+        const dashboardSection = document.getElementById('dashboard-section');
         const googleLoginBtn = document.getElementById('google-login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const convertForm = document.getElementById('convert-form');
+        const userName = document.getElementById('user-name');
+        const errorMessage = document.getElementById('error-message');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const convertMessage = document.getElementById('convert-message');
 
         function showLoading() {
             loadingOverlay.style.display = 'flex';
@@ -192,11 +239,47 @@
         function hideLoading() {
             loadingOverlay.style.display = 'none';
         }
+
+        function showMessage(element, message, isError = false) {
+            element.textContent = message;
+            element.style.display = 'block';
+            if (isError) {
+                element.classList.remove('success-message');
+                element.classList.add('error-message');
+            } else {
+                element.classList.remove('error-message');
+                element.classList.add('success-message');
+            }
+        }
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            authReady = true;
+        } catch (e) {
+            console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
+            showMessage(errorMessage, `Kesalahan: Gagal menginisialisasi Firebase. ${e.message}`, true);
+        }
+
+        const provider = new GoogleAuthProvider();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Pengguna sudah login, tampilkan dashboard
+                loginSection.style.display = 'none';
+                dashboardSection.style.display = 'flex';
+                userName.textContent = user.displayName || 'Pengguna';
+            } else {
+                // Pengguna belum login atau sudah logout, tampilkan halaman login
+                loginSection.style.display = 'flex';
+                dashboardSection.style.display = 'none';
+            }
+        });
         
         if (googleLoginBtn) {
             googleLoginBtn.addEventListener('click', () => {
                 if (!authReady) {
-                    showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.");
+                    showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.", true);
                     return;
                 }
                 
@@ -205,21 +288,56 @@
 
                 signInWithPopup(auth, provider)
                     .then((result) => {
-                        window.location.href = 'index.html';
+                        // Tidak perlu redirect, onAuthStateChanged akan menangani tampilan
+                        hideLoading();
                     })
                     .catch((error) => {
+                        hideLoading();
                         const errorCode = error.code;
                         const errorText = error.message;
                         if (errorCode === 'auth/unauthorized-domain') {
-                            showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.");
+                            showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.", true);
                         } else {
-                            showMessage(errorMessage, `Login gagal: ${errorText}`);
+                            showMessage(errorMessage, `Login gagal: ${errorText}`, true);
                         }
                         console.error("Login gagal:", errorCode, errorText);
-                    })
-                    .finally(() => {
-                        hideLoading();
                     });
+            });
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    // Berhasil keluar
+                    console.log("Pengguna berhasil keluar.");
+                }).catch((error) => {
+                    console.error("Kesalahan saat keluar:", error);
+                });
+            });
+        }
+
+        if (convertForm) {
+            convertForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                convertMessage.style.display = 'none';
+                
+                const provider = document.getElementById('provider').value;
+                const phone = document.getElementById('phone').value;
+                const amount = document.getElementById('amount').value;
+
+                if (!phone || !amount) {
+                    showMessage(convertMessage, "Harap isi semua kolom!", true);
+                    return;
+                }
+
+                // Simulasikan proses konversi
+                showLoading();
+                setTimeout(() => {
+                    hideLoading();
+                    const user = auth.currentUser;
+                    const successMessage = `Halo ${user.displayName}! Pulsa Anda sebesar Rp${amount} dari ${provider} berhasil dikonversi. Terima kasih!`;
+                    showMessage(convertMessage, successMessage);
+                }, 2000); // Tunda 2 detik untuk simulasi
             });
         }
     </script>
