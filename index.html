@@ -143,85 +143,90 @@
         <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
     </div>
 
-    <script type="module">
-        // Import fungsi yang Anda butuhkan dari Firebase SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
-        // Konfigurasi aplikasi web Firebase Anda
-        // >>>>>>> PENTING: GANTI SEMUA NILAI DI BAWAH INI DENGAN KREDENSIAL ASLI ANDA <<<<<<<
-        const firebaseConfig = {
-            apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", 
-            authDomain: "webseit-convert-pulsa.firebaseapp.com",
-            projectId: "webseit-convert-pulsa",
-            storageBucket: "webseit-convert-pulsa.firebasestorage.app",
-            messagingSenderId: "306830134070",
-            appId: "1:306830134070:web:23c764342a141749238197"
-        };
-        
-        // Inisialisasi Firebase
-        let app, auth;
-        let authReady = false;
-        const errorMessage = document.getElementById('error-message');
-        
-        function showMessage(element, message) {
-            element.textContent = message;
-            element.style.display = 'block';
-        }
+   <script type="module">
+    // Import fungsi yang Anda butuhkan dari Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            authReady = true;
+    // Konfigurasi aplikasi web Firebase Anda
+    // >>>>>>> PENTING: GANTI SEMUA NILAI DI BAWAH INI DENGAN KREDENSIAL ASLI ANDA <<<<<<<
+    const firebaseConfig = {
+        apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", // GANTI dengan API Key Anda
+        authDomain: "webseit-convert-pulsa.firebaseapp.com", // GANTI dengan Auth Domain Anda
+        projectId: "webseit-convert-pulsa", // GANTI dengan Project ID Anda
+        storageBucket: "webseit-convert-pulsa.firebasestorage.app",
+        messagingSenderId: "306830134070",
+        appId: "1:306830134070:web:23c764342a141749238197"
+    };
+    
+    // Inisialisasi Firebase
+    let app, auth;
+    let authReady = false;
+    const errorMessage = document.getElementById('error-message'); // Ambil elemen error
+    
+    // Fungsi pembantu untuk menampilkan pesan error di UI
+    function showMessage(element, message) {
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+
+    try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        authReady = true;
+        
+    } catch (e) {
+        console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
+        const initError = e.message;
+        showMessage(errorMessage, `Kesalahan: Gagal menginisialisasi Firebase. ${initError}`);
+    }
+
+    const provider = new GoogleAuthProvider();
+
+    // --- DOM Elements ---
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // --- Helper Functions ---
+    function showLoading() {
+        loadingOverlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+    }
+    
+    // --- Event Listener ---
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', () => {
+            if (!authReady) {
+                showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.");
+                return;
+            }
             
-        } catch (e) {
-            console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
-            const initError = e.message;
-            showMessage(errorMessage, Kesalahan: Gagal menginisialisasi Firebase. ${initError});
-        }
+            showLoading();
+            errorMessage.style.display = 'none'; 
 
-        const provider = new GoogleAuthProvider();
-
-        const googleLoginBtn = document.getElementById('google-login-btn');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-
-        function showLoading() {
-            loadingOverlay.style.display = 'flex';
-        }
-
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
-        
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', () => {
-                if (!authReady) {
-                    showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.");
-                    return;
-                }
-                
-                showLoading();
-                errorMessage.style.display = 'none'; 
-
-                signInWithPopup(auth, provider)
-                    .then((result) => {
-                        window.location.href = 'dashboard.html';
-                    })
-                    .catch((error) => {
-                        const errorCode = error.code;
-                        const errorText = error.message;
-                        if (errorCode === 'auth/unauthorized-domain') {
-                            showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.");
-                        } else {
-                            showMessage(errorMessage, Login gagal: ${errorText});
-                        }
-                        console.error("Login gagal:", errorCode, errorText);
-                    })
-                    .finally(() => {
-                        hideLoading();
-                    });
-            });
-        }
-    </script>
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    // Login berhasil
+                    window.location.href = 'dashboard.html';
+                })
+                .catch((error) => {
+                    // Login gagal
+                    hideLoading();
+                    const errorCode = error.code;
+                    const errorText = error.message;
+                    if (errorCode === 'auth/unauthorized-domain') {
+                        showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.");
+                    } else {
+                        showMessage(errorMessage, `Login gagal: ${errorText}`);
+                    }
+                    console.error("Login gagal:", errorCode, errorText);
+                });
+        });
+    }
+</script>
 </body>
 </html>
+
