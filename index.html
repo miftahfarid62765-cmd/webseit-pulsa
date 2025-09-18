@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konverter Pulsa</title>
+    <title>Login - Konverter Pulsa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -54,7 +54,6 @@
             margin-top: 2rem;
             transition: all 0.2s;
             border: none;
-            cursor: pointer;
         }
         .btn-google:hover {
             background-color: #e55c32;
@@ -101,7 +100,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .message-box {
+        .error-message {
             color: #e53e3e;
             font-size: 0.875rem;
             margin-top: 0.5rem;
@@ -109,40 +108,6 @@
             background-color: #fecaca;
             padding: 0.5rem;
             border-radius: 0.375rem;
-            border: 1px solid #fbd3d3;
-        }
-        .success-message {
-            color: #2f855a;
-            background-color: #c6f6d5;
-            border: 1px solid #9ae6b4;
-        }
-        #login-section {
-            display: none;
-        }
-        #dashboard-section {
-            display: none;
-            width: 100%;
-        }
-        input, select, button {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
-            box-sizing: border-box;
-        }
-        button:not(#google-login-btn) {
-            background-color: #4299e1;
-            color: white;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        button:not(#google-login-btn):hover {
-            background-color: #3182ce;
-        }
-        .disabled-btn {
-            background-color: #cbd5e0 !important;
-            cursor: not-allowed;
         }
     </style>
 </head>
@@ -152,14 +117,15 @@
         <div class="spinner"></div>
     </div>
 
-    <!-- Halaman Login -->
-    <div id="login-section" class="container">
+    <div class="container">
         <div class="card">
+            <!-- Menampilkan gambar yang diunggah -->
             <img src="https://placehold.co/300x200/FFFFFF/000000?text=Gambar+Animasi" alt="Gambar ilustrasi" class="mx-auto my-4 w-auto h-48">
+
             <h2 class="welcome-text">Ayo Login, Ada Promo Menunggu!</h2>
             <p class="promo-text">Nikmati kemudahan transaksi dan promo eksklusif khusus pengguna yang login.</p>
             
-            <button id="google-login-btn" class="btn-google disabled-btn" disabled>
+            <button id="google-login-btn" class="btn-google">
                 <!-- Ikon Google SVG -->
                 <svg class="google-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12.24 10.213c-1.372 0-2.617-.468-3.64-1.258V6.634C9.563 5.378 10.74 4.542 12.24 4.542c1.5 0 2.677.836 3.64 2.052l2.396-1.921C16.96 3.03 14.77 1.542 12.24 1.542c-2.48 0-4.67 1.488-6.196 3.738L4.364 3.03C2.84 5.28 1.956 7.64 1.956 10.213s.884 4.933 2.408 7.183l1.68-1.558C5.232 15.352 4.4 13.585 4.4 11.666c0-1.919.832-3.686 2.408-4.94L7.85 5.567C8.756 4.61 10.04 4.092 11.458 4.092c1.417 0 2.702.518 3.64 1.536l-1.314 1.22c-.938-1.018-2.072-1.536-3.418-1.536-1.5 0-2.677.836-3.64 2.052l-2.396 1.921C7.03 12.394 9.22 13.88 11.7 13.88c2.48 0 4.67-1.488 6.196-3.738l1.68 1.558C17.228 15.352 16.4 17.119 16.4 19.038c0 1.919-.832 3.686-2.408 4.94L12.592 22.42c-1.666-1.638-2.5-3.69-2.5-5.918 0-2.228.834-4.28 2.5-5.918z" fill="#000000"/>
@@ -167,7 +133,8 @@
                 Masuk dengan Google
             </button>
 
-            <div id="status-message" class="message-box"></div>
+            <!-- Menghapus status-message karena kita langsung redirect -->
+            <div id="error-message" class="error-message"></div>
 
             <p class="footer-links">
                 Sudah punya Akun? <a href="#">Masuk di sini</a>
@@ -176,43 +143,13 @@
         <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
     </div>
 
-    <!-- Halaman Beranda / Dashboard -->
-    <div id="dashboard-section" class="container">
-        <div class="card">
-            <h2 class="welcome-text">Selamat Datang, <span id="user-name">Pengguna</span>!</h2>
-            <p class="promo-text">Silakan masukkan detail konversi pulsa Anda.</p>
-            
-            <form id="convert-form" class="mt-6">
-                <div class="mb-4">
-                    <label for="provider" class="block text-left font-medium text-gray-700">Penyedia Layanan</label>
-                    <select id="provider" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        <option value="telkomsel">Telkomsel</option>
-                        <option value="indosat">Indosat</option>
-                        <option value="xl">XL Axiata</option>
-                        <option value="tri">Tri</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label for="phone" class="block text-left font-medium text-gray-700">Nomor Ponsel</label>
-                    <input type="tel" id="phone" placeholder="Masukkan nomor ponsel Anda" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                </div>
-                <div class="mb-4">
-                    <label for="amount" class="block text-left font-medium text-gray-700">Nominal Pulsa</label>
-                    <input type="number" id="amount" placeholder="Masukkan nominal pulsa" min="10000" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                </div>
-                <div id="convert-message" class="message-box"></div>
-                <button type="submit" class="bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg mt-4 hover:bg-indigo-600 transition duration-300">Konversi Sekarang</button>
-            </form>
-            <button id="logout-btn" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg mt-4 hover:bg-gray-500 transition duration-300">Keluar</button>
-        </div>
-        <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
-    </div>
-
     <script type="module">
+        // Import fungsi yang Anda butuhkan dari Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // --- Konfigurasi Firebase Anda ---
+        // Konfigurasi aplikasi web Firebase Anda
+        // >>>>>>> PENTING: GANTI SEMUA NILAI DI BAWAH INI DENGAN KREDENSIAL ASLI ANDA <<<<<<<
         const firebaseConfig = {
             apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", 
             authDomain: "webseit-convert-pulsa.firebaseapp.com",
@@ -222,18 +159,32 @@
             appId: "1:306830134070:web:23c764342a141749238197"
         };
         
-        // --- Referensi Elemen HTML ---
-        const loginSection = document.getElementById('login-section');
-        const dashboardSection = document.getElementById('dashboard-section');
-        const googleLoginBtn = document.getElementById('google-login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const convertForm = document.getElementById('convert-form');
-        const userName = document.getElementById('user-name');
-        const statusMessage = document.getElementById('status-message');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const convertMessage = document.getElementById('convert-message');
+        // Inisialisasi Firebase
+        let app, auth;
+        let authReady = false;
+        const errorMessage = document.getElementById('error-message');
+        
+        function showMessage(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
 
-        // --- Fungsi Pembantu ---
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            authReady = true;
+            
+        } catch (e) {
+            console.error("Kesalahan inisialisasi Firebase. Pastikan firebaseConfig Anda benar.", e);
+            const initError = e.message;
+            showMessage(errorMessage, Kesalahan: Gagal menginisialisasi Firebase. ${initError});
+        }
+
+        const provider = new GoogleAuthProvider();
+
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
         function showLoading() {
             loadingOverlay.style.display = 'flex';
         }
@@ -241,91 +192,34 @@
         function hideLoading() {
             loadingOverlay.style.display = 'none';
         }
-
-        function showMessage(element, message, isError = false) {
-            element.textContent = message;
-            element.style.display = 'block';
-            if (isError) {
-                element.classList.remove('success-message');
-            } else {
-                element.classList.add('success-message');
-            }
-        }
-
-        // --- Inisialisasi Firebase ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        // --- Handler Redirect Google ---
-        getRedirectResult(auth)
-            .then((result) => {
-                // Ini akan dijalankan setelah proses redirect Google selesai
-                if (result) {
-                    // Login berhasil, tidak perlu melakukan apa-apa
-                    // onAuthStateChanged akan menangani tampilan UI
-                }
-            })
-            .catch((error) => {
-                // Tangani kesalahan saat redirect
-                showMessage(statusMessage, `Gagal masuk: ${error.message}`, true);
-            });
-
-        // --- Listener Perubahan Status Otentikasi ---
-        // Ini adalah fungsi utama yang mengontrol tampilan UI
-        onAuthStateChanged(auth, (user) => {
-            hideLoading();
-            googleLoginBtn.disabled = false;
-            googleLoginBtn.classList.remove('disabled-btn');
-
-            if (user) {
-                // Pengguna terdeteksi, tampilkan dashboard
-                loginSection.style.display = 'none';
-                dashboardSection.style.display = 'flex';
-                userName.textContent = user.displayName || 'Pengguna';
-            } else {
-                // Tidak ada pengguna, tampilkan halaman login
-                loginSection.style.display = 'flex';
-                dashboardSection.style.display = 'none';
-            }
-        });
         
-        // --- Event Listener Tombol ---
         if (googleLoginBtn) {
             googleLoginBtn.addEventListener('click', () => {
-                showLoading();
-                signInWithRedirect(auth, provider);
-            });
-        }
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                signOut(auth);
-            });
-        }
-
-        if (convertForm) {
-            convertForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                convertMessage.style.display = 'none';
-                
-                const provider = document.getElementById('provider').value;
-                const phone = document.getElementById('phone').value;
-                const amount = document.getElementById('amount').value;
-
-                if (!phone || !amount) {
-                    showMessage(convertMessage, "Harap isi semua kolom!", true);
+                if (!authReady) {
+                    showMessage(errorMessage, "Sistem Login belum siap. Coba refresh halaman.");
                     return;
                 }
-
+                
                 showLoading();
-                // Simulasi konversi, ganti dengan logika konversi pulsa Anda
-                setTimeout(() => {
-                    hideLoading();
-                    const user = auth.currentUser;
-                    const successMessage = `Halo ${user.displayName}! Pulsa Anda sebesar Rp${amount} dari ${provider} berhasil dikonversi. Terima kasih!`;
-                    showMessage(convertMessage, successMessage);
-                }, 2000);
+                errorMessage.style.display = 'none'; 
+
+                signInWithPopup(auth, provider)
+                    .then((result) => {
+                        window.location.href = 'dashboard.html';
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        const errorText = error.message;
+                        if (errorCode === 'auth/unauthorized-domain') {
+                            showMessage(errorMessage, "KESALAHAN DOMAIN: Pastikan URL GitHub Pages Anda sudah terdaftar di Firebase Authorized Domains.");
+                        } else {
+                            showMessage(errorMessage, Login gagal: ${errorText});
+                        }
+                        console.error("Login gagal:", errorCode, errorText);
+                    })
+                    .finally(() => {
+                        hideLoading();
+                    });
             });
         }
     </script>
