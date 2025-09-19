@@ -265,34 +265,22 @@
         }
 
         // --- 🚦 KONTROL OTENTIKASI PENGGUNA 🚦 ---
-        // Tampilkan loading saat halaman pertama kali dimuat
+        // PENTING: Menggunakan onAuthStateChanged sebagai sumber kebenaran tunggal
+        // untuk mengendalikan tampilan UI
         showLoading();
 
-        // Tangani hasil redirect dari Google
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result) {
-                    console.log("Login berhasil dari redirect.");
-                }
-            })
-            .catch((error) => {
-                showMessage(statusMessage, `Gagal masuk: ${error.message}`, true);
-            })
-            .finally(() => {
-                hideLoading();
-            });
-
-        // Listener perubahan status otentikasi
         onAuthStateChanged(auth, (user) => {
-            hideLoading();
             if (user) {
+                // Pengguna sudah login, tampilkan dashboard
                 loginSection.style.display = 'none';
                 dashboardSection.style.display = 'flex';
                 userName.textContent = user.displayName || 'Pengguna';
             } else {
+                // Pengguna belum login, tampilkan halaman login
                 loginSection.style.display = 'flex';
                 dashboardSection.style.display = 'none';
             }
+            hideLoading();
         });
         
         // --- 🔗 EVENT LISTENERS 🔗 ---
