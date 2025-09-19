@@ -159,7 +159,7 @@
             <h2 class="welcome-text">Ayo Login, Ada Promo Menunggu!</h2>
             <p class="promo-text">Nikmati kemudahan transaksi dan promo eksklusif khusus pengguna yang login.</p>
             
-            <button id="google-login-btn" class="btn-google disabled-btn" disabled>
+            <button id="google-login-btn" class="btn-google">
                 <!-- Ikon Google SVG -->
                 <svg class="google-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12.24 10.213c-1.372 0-2.617-.468-3.64-1.258V6.634C9.563 5.378 10.74 4.542 12.24 4.542c1.5 0 2.677.836 3.64 2.052l2.396-1.921C16.96 3.03 14.77 1.542 12.24 1.542c-2.48 0-4.67 1.488-6.196 3.738L4.364 3.03C2.84 5.28 1.956 7.64 1.956 10.213s.884 4.933 2.408 7.183l1.68-1.558C5.232 15.352 4.4 13.585 4.4 11.666c0-1.919.832-3.686 2.408-4.94L7.85 5.567C8.756 4.61 10.04 4.092 11.458 4.092c1.417 0 2.702.518 3.64 1.536l-1.314 1.22c-.938-1.018-2.072-1.536-3.418-1.536-1.5 0-2.677.836-3.64 2.052l-2.396 1.921C7.03 12.394 9.22 13.88 11.7 13.88c2.48 0 4.67-1.488 6.196-3.738l1.68 1.558C17.228 15.352 16.4 17.119 16.4 19.038c0 1.919-.832 3.686-2.408 4.94L12.592 22.42c-1.666-1.638-2.5-3.69-2.5-5.918 0-2.228.834-4.28 2.5-5.918z" fill="#000000"/>
@@ -170,7 +170,7 @@
             <div id="status-message" class="message-box"></div>
 
             <p class="footer-links">
-                Sudah punya Akun? <a href="#">Masuk di sini</a>
+                Sudah punya Akun? <a href="#" id="manual-login-link">Masuk di sini</a>
             </p>
         </div>
         <p class="mt-4 text-xs text-gray-400">Powered by Viapulsa</p>
@@ -212,7 +212,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // --- ⚙️ TEMPAT GANTI KONFIGURASI FIREBASE ANDA ⚙️ ---
+        // --- ⚙️ FIREBASE SETUP DAN KONFIGURASI ⚙️ ---
         // Anda bisa mendapatkan ini dari Firebase Console > Project Settings
         const firebaseConfig = {
             apiKey: "AIzaSyDWYM3D8HIz5vPy8ljsSnKL-zHz6zaqBBA", 
@@ -223,7 +223,11 @@
             appId: "1:306830134070:web:23c764342a141749238197"
         };
         
-        // --- Referensi Elemen HTML ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // --- 📂 REFERENSI ELEMEN HTML 📂 ---
         const loginSection = document.getElementById('login-section');
         const dashboardSection = document.getElementById('dashboard-section');
         const googleLoginBtn = document.getElementById('google-login-btn');
@@ -233,14 +237,21 @@
         const statusMessage = document.getElementById('status-message');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const convertMessage = document.getElementById('convert-message');
+        const manualLoginLink = document.getElementById('manual-login-link');
 
-        // --- Fungsi Pembantu ---
+        // --- 🛠️ FUNGSI PEMBANTU 🛠️ ---
         function showLoading() {
             loadingOverlay.style.display = 'flex';
+            googleLoginBtn.disabled = true;
+            googleLoginBtn.classList.add('disabled-btn');
+            manualLoginLink.classList.add('disabled-btn');
         }
 
         function hideLoading() {
             loadingOverlay.style.display = 'none';
+            googleLoginBtn.disabled = false;
+            googleLoginBtn.classList.remove('disabled-btn');
+            manualLoginLink.classList.remove('disabled-btn');
         }
 
         function showMessage(element, message, isError = false) {
@@ -253,11 +264,7 @@
             }
         }
 
-        // --- Inisialisasi Firebase ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
+        // --- 🚦 KONTROL OTENTIKASI PENGGUNA 🚦 ---
         // Tampilkan loading saat halaman pertama kali dimuat
         showLoading();
 
@@ -273,12 +280,11 @@
             })
             .finally(() => {
                 hideLoading();
-                googleLoginBtn.disabled = false;
-                googleLoginBtn.classList.remove('disabled-btn');
             });
 
         // Listener perubahan status otentikasi
         onAuthStateChanged(auth, (user) => {
+            hideLoading();
             if (user) {
                 loginSection.style.display = 'none';
                 dashboardSection.style.display = 'flex';
@@ -289,7 +295,8 @@
             }
         });
         
-        // --- Event Listener Tombol Login ---
+        // --- 🔗 EVENT LISTENERS 🔗 ---
+        // Tombol Login Google
         if (googleLoginBtn) {
             googleLoginBtn.addEventListener('click', () => {
                 showLoading();
@@ -297,14 +304,23 @@
             });
         }
 
-        // --- Event Listener Tombol Logout ---
+        // Tautan "Masuk di sini"
+        if (manualLoginLink) {
+            manualLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showLoading();
+                signInWithRedirect(auth, provider);
+            });
+        }
+
+        // Tombol Logout
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
                 signOut(auth);
             });
         }
 
-        // --- Event Listener Form Konversi ---
+        // Form Konversi Pulsa
         if (convertForm) {
             convertForm.addEventListener('submit', (e) => {
                 e.preventDefault();
